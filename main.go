@@ -2,20 +2,21 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"io/fs"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
-
-	"github.com/rwcarlsen/goexif/exif"
-	"github.com/rwcarlsen/goexif/mknote"
 )
 
 func main() {
-	CheminPhotos := "./Photos"
-	CheminRange := "./Rangee"
+	CheminPhotos, Destination := arguments()
+	VerifCheminPhotos, VerifDestination := verification(CheminPhotos, Destination)
+	if VerifCheminPhotos || VerifDestination {
+		return
+	}
+	//CheminPhotos := "./Photos"
+	//Destination := "./Rangee"
 	err := filepath.Walk(CheminPhotos, func(path string, info fs.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -24,7 +25,7 @@ func main() {
 		if !info.IsDir() {
 			date := date_img(path)
 			dateFormate := date.Format("2006-01-02")
-			RepertoireDate(dateFormate, CheminRange, path)
+			RepertoireDate(dateFormate, Destination, path)
 		}
 		//fmt.Println(path)
 
@@ -37,7 +38,9 @@ func main() {
 }
 func RepertoireDate(date string, chemin string, photos string) {
 	TabDate := strings.Split(date, "-")
-	fmt.Println(TabDate)
+	TabPhoto := strings.Split(photos, "/")
+	NbRepertoires := len(TabPhoto)
+	//fmt.Println(TabDate)
 	CheminProvisoir := chemin
 	_, err := os.Stat(CheminProvisoir)
 	if err != nil {
@@ -54,31 +57,15 @@ func RepertoireDate(date string, chemin string, photos string) {
 		}
 
 	}
-
-}
-
-func date_img(fname string) time.Time {
-
-	f, err := os.Open(fname)
+	source, err := os.Open(photos)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
 	}
-
-	exif.RegisterParsers(mknote.All...)
-
-	x, err := exif.Decode(f)
+	defer source.Close()
+	dst, err := os.Create(CheminProvisoir + "/" + TabPhoto[NbRepertoires-1])
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
 	}
-	/*
-		camModel, _ := x.Get(exif.Model)
-		fmt.Println(camModel.StringVal())
-	*/
-	tm, err := x.DateTime()
-	if err != nil {
-		log.Fatal(err)
-	}
-	//	fmt.Println(fname, tm)
-
-	return tm
+	defer dst.Close()
+	io.Copy(dst, source)
 }
