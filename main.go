@@ -23,9 +23,15 @@ func main() {
 		}
 
 		if !info.IsDir() {
-			date := date_img(path)
-			dateFormate := date.Format("2006-01-02")
-			RepertoireDate(dateFormate, Destination, path)
+			extention := strings.Split(path, ".")
+			lenExtention := len(extention)
+			if extention[lenExtention-1] != "mp4" {
+
+				date := date_img(path)
+				dateFormate := date.Format("2006-01-02")
+				//fmt.Println(path)
+				RepertoireDate(dateFormate, Destination, path)
+			}
 		}
 		//fmt.Println(path)
 
@@ -37,6 +43,7 @@ func main() {
 
 }
 func RepertoireDate(date string, chemin string, photos string) {
+	//fmt.Println("ici")
 	TabDate := strings.Split(date, "-")
 	TabPhoto := strings.Split(photos, "/")
 	NbRepertoires := len(TabPhoto)
@@ -68,4 +75,5 @@ func RepertoireDate(date string, chemin string, photos string) {
 	}
 	defer dst.Close()
 	io.Copy(dst, source)
+	//fmt.Println("fin")
 }

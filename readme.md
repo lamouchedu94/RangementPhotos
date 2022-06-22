@@ -10,4 +10,3 @@ main.go {Parametres}
 Parametres : 
     -c Dossier Source
     -d Dossier Destination
-```
