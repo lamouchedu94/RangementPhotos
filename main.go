@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 func main() {
@@ -17,6 +18,9 @@ func main() {
 	}
 	//CheminPhotos := "./Photos"
 	//Destination := "./Rangee"
+	NbPhotos := 0
+	deb := time.Now()
+
 	err := filepath.Walk(CheminPhotos, func(path string, info fs.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -31,6 +35,8 @@ func main() {
 				dateFormate := date.Format("2006-01-02")
 				//fmt.Println(path)
 				RepertoireDate(dateFormate, Destination, path)
+
+				NbPhotos += 1
 			}
 		}
 		//fmt.Println(path)
@@ -40,18 +46,19 @@ func main() {
 	if err != nil {
 		fmt.Println(err)
 	}
-
+	fin := time.Now()
+	fmt.Println(NbPhotos, "Photos Triées en :", fin.Sub(deb))
 }
 func RepertoireDate(date string, chemin string, photos string) {
 	//fmt.Println("ici")
 	TabDate := strings.Split(date, "-")
+	TabDate = FormatageMois(TabDate)
 	TabPhoto := strings.Split(photos, "/")
 	NbRepertoires := len(TabPhoto)
 	//fmt.Println(TabDate)
 	CheminProvisoir := chemin
 	_, err := os.Stat(CheminProvisoir)
 	if err != nil {
-		fmt.Println(err)
 		os.Mkdir(CheminProvisoir, os.ModePerm)
 	}
 
@@ -59,15 +66,12 @@ func RepertoireDate(date string, chemin string, photos string) {
 		CheminProvisoir += "/" + TabDate[i]
 		_, err := os.Stat(CheminProvisoir)
 		if err != nil {
-			fmt.Println(err)
+			//fmt.Println(err)
 			os.Mkdir(CheminProvisoir, os.ModePerm)
 		}
 
 	}
-	source, err := os.Open(photos)
-	if err != nil {
-		fmt.Println(err)
-	}
+	source, _ := os.Open(photos)
 	defer source.Close()
 	dst, err := os.Create(CheminProvisoir + "/" + TabPhoto[NbRepertoires-1])
 	if err != nil {
