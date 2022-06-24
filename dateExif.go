@@ -9,7 +9,7 @@ import (
 	"github.com/rwcarlsen/goexif/mknote"
 )
 
-func date_img(fname string) time.Time {
+func DateImg(fname string) time.Time {
 
 	f, err := os.Open(fname)
 	if err != nil {

@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -18,8 +19,11 @@ func main() {
 	}
 	//CheminPhotos := "./Photos"
 	//Destination := "./Rangee"
-	NbPhotos := 0
+	Debut := 0
 	deb := time.Now()
+	var TabPathPhoto []string
+	var TabDate []string
+	var wg sync.WaitGroup
 
 	err := filepath.Walk(CheminPhotos, func(path string, info fs.FileInfo, err error) error {
 		if err != nil {
@@ -31,24 +35,57 @@ func main() {
 			lenExtention := len(extention)
 			if extention[lenExtention-1] != "mp4" {
 
-				date := date_img(path)
+				date := DateImg(path)
 				dateFormate := date.Format("2006-01-02")
-				//fmt.Println(path)
-				RepertoireDate(dateFormate, Destination, path)
+				TabDate = append(TabDate, dateFormate)
+				TabPathPhoto = append(TabPathPhoto, path)
 
-				NbPhotos += 1
 			}
 		}
-		//fmt.Println(path)
-
-		return nil
+		return err
 	})
+	interval := decoupage(TabPathPhoto)
+	echantillon := interval
+	for i := 0; i < 2; i++ {
+		if echantillon > len(TabPathPhoto) {
+			echantillon = Debut + (len(TabPathPhoto) - Debut)
+		}
+		wg.Add(1)
+		go func(Destination string, Debut int, echatillon int) {
+			Boucle(Debut, echatillon, TabDate, Destination, TabPathPhoto)
+
+			wg.Done()
+		}(Destination, Debut, echantillon)
+		//fmt.Println("Deb", Debut, "Echan", echantillon, "inter", interval)
+		Debut += interval
+		echantillon += interval
+
+	}
+	wg.Wait()
+	//fmt.Println(path)
+
+	//return nil
+
 	if err != nil {
 		fmt.Println(err)
 	}
 	fin := time.Now()
-	fmt.Println(NbPhotos, "Photos Triées en :", fin.Sub(deb))
+	//fmt.Println(len(TabPathPhoto), len(TabDate))
+	fmt.Println(Debut, "Photos Triées en :", fin.Sub(deb))
 }
+
+func decoupage(TabPathPhoto []string) int {
+	long := len(TabPathPhoto)
+	return (long / 2) + 1 //runtime.NumCPU()) + 1
+}
+
+func Boucle(debut int, fin int, TabDate []string, Destination string, path []string) {
+	fmt.Println(debut, fin, "ici")
+	for i := debut; i < fin; i++ {
+		RepertoireDate(TabDate[i], Destination, path[i])
+	}
+}
+
 func RepertoireDate(date string, chemin string, photos string) {
 	//fmt.Println("ici")
 	TabDate := strings.Split(date, "-")
