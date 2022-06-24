@@ -11,17 +11,19 @@ import (
 )
 
 func main() {
-	CheminPhotos, Destination := arguments()
-	VerifCheminPhotos, VerifDestination := verification(CheminPhotos, Destination)
-	if VerifCheminPhotos || VerifDestination {
+	err := ArgumentsVerif()
+	if err != nil {
+		fmt.Println(err)
 		return
 	}
+	settings := Settings{}
+	fmt.Println(settings.SrcPath)
 	//CheminPhotos := "./Photos"
 	//Destination := "./Rangee"
 	NbPhotos := 0
 	deb := time.Now()
 
-	err := filepath.Walk(CheminPhotos, func(path string, info fs.FileInfo, err error) error {
+	err = filepath.Walk(settings.SrcPath, func(path string, info fs.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
@@ -33,8 +35,7 @@ func main() {
 
 				date := date_img(path)
 				dateFormate := date.Format("2006-01-02")
-				//fmt.Println(path)
-				RepertoireDate(dateFormate, Destination, path)
+				RepertoireDate(dateFormate, settings.DstPath, path)
 
 				NbPhotos += 1
 			}
