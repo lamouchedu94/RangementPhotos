@@ -6,11 +6,35 @@ import (
 	"os"
 )
 
-func arguments() (string, string) {
-	ArgCheminPhotos := flag.String("c", "", "Dossier Photos")
-	ArgDestination := flag.String("d", "", "Dossier destination")
+type Settings struct {
+	SrcPath string
+	DstPath string
+}
+
+func ArgumentsVerif() error {
+	settings := Settings{}
+
+	flag.StringVar(&settings.SrcPath, "s", "", "Dossier Photos")
+	flag.StringVar(&settings.DstPath, "d", "", "Dossier destination")
 	flag.Parse()
-	return *ArgCheminPhotos, *ArgDestination
+
+	_, err := os.Stat(settings.SrcPath)
+	if err != nil {
+		return fmt.Errorf("Dossier Photo Incorrect")
+	}
+	_, err = os.Stat(settings.DstPath)
+	if err != nil {
+		fmt.Println("Dossier Destination Innexistant. Le créer ? Y or N")
+		res := ""
+		fmt.Scanln(&res)
+		if res == "Y" {
+			err = os.Mkdir(settings.DstPath, os.ModePerm)
+		}
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 func verification(CheminPhotos, destination string) (bool, bool) {
 	photo := false

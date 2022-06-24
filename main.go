@@ -12,20 +12,21 @@ import (
 )
 
 func main() {
-	CheminPhotos, Destination := arguments()
-	VerifCheminPhotos, VerifDestination := verification(CheminPhotos, Destination)
-	if VerifCheminPhotos || VerifDestination {
-		return
-	}
+
+	//VerifCheminPhotos, VerifDestination := verification(CheminPhotos, Destination)
 	//CheminPhotos := "./Photos"
 	//Destination := "./Rangee"
-	Debut := 0
+	err := ArgumentsVerif()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 	deb := time.Now()
 	var TabPathPhoto []string
 	var TabDate []string
 	var wg sync.WaitGroup
-
-	err := filepath.Walk(CheminPhotos, func(path string, info fs.FileInfo, err error) error {
+	settings := Settings{}
+	err = filepath.Walk(settings.SrcPath, func(path string, info fs.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
@@ -44,39 +45,38 @@ func main() {
 		}
 		return err
 	})
+	Debut := 0
+	NbPhotos := 0
 	interval := decoupage(TabPathPhoto)
 	echantillon := interval
-	for i := 0; i < 2; i++ {
+
+	for i := 0; i < 4; i++ {
 		if echantillon > len(TabPathPhoto) {
 			echantillon = Debut + (len(TabPathPhoto) - Debut)
 		}
 		wg.Add(1)
-		go func(Destination string, Debut int, echatillon int) {
-			Boucle(Debut, echatillon, TabDate, Destination, TabPathPhoto)
-
+		go func(Destination string, Debut int, echantillon int) {
+			Boucle(Debut, echantillon, TabDate, Destination, TabPathPhoto)
 			wg.Done()
-		}(Destination, Debut, echantillon)
+		}(settings.DstPath, Debut, echantillon)
 		//fmt.Println("Deb", Debut, "Echan", echantillon, "inter", interval)
 		Debut += interval
 		echantillon += interval
 
 	}
 	wg.Wait()
-	//fmt.Println(path)
-
-	//return nil
 
 	if err != nil {
 		fmt.Println(err)
 	}
 	fin := time.Now()
 	//fmt.Println(len(TabPathPhoto), len(TabDate))
-	fmt.Println(Debut, "Photos Triées en :", fin.Sub(deb))
+	fmt.Println(NbPhotos, "Photos Triées en :", fin.Sub(deb))
 }
 
 func decoupage(TabPathPhoto []string) int {
 	long := len(TabPathPhoto)
-	return (long / 2) + 1 //runtime.NumCPU()) + 1
+	return (long / 4) + 1 //runtime.NumCPU()) + 1
 }
 
 func Boucle(debut int, fin int, TabDate []string, Destination string, path []string) {
