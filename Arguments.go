@@ -11,53 +11,28 @@ type Settings struct {
 	DstPath string
 }
 
-func ArgumentsVerif() error {
-	settings := Settings{}
-	flag.StringVar(&settings.SrcPath, "s", "", "Dossier Photos")
-	flag.StringVar(&settings.DstPath, "d", "", "Dossier destination")
+func (s *Settings) ArgumentsVerif() error {
 
-	fmt.Println(settings.DstPath, settings.SrcPath)
-
+	flag.StringVar(&s.SrcPath, "s", "", "Dossier Photos")
+	flag.StringVar(&s.DstPath, "d", "", "Dossier destination")
 	flag.Parse()
-	_, err := os.Stat(settings.SrcPath)
+	fmt.Println(s.DstPath, s.SrcPath)
+
+	_, err := os.Stat(s.SrcPath)
 	if err != nil {
 		return fmt.Errorf("Dossier Photo Incorrect")
 	}
-	_, err = os.Stat(settings.DstPath)
+	_, err = os.Stat(s.DstPath)
 	if err != nil {
 		fmt.Println("Dossier Destination Innexistant. Le créer ? Y or N")
 		rep := ""
 		fmt.Scanln(&rep)
 		if rep == "Y" {
-			err = os.Mkdir(settings.DstPath, os.ModePerm)
+			err = os.Mkdir(s.DstPath, os.ModePerm)
 			if err != nil {
 				return err
 			}
 		}
 	}
 	return nil
-}
-
-func verification(CheminPhotos, destination string) (bool, bool) {
-	photo := false
-	dest := false
-	_, err1 := os.Stat(CheminPhotos)
-	if err1 != nil {
-		fmt.Println("Dossier Photo Incorrect")
-		photo = true
-		return photo, true
-	}
-	_, err2 := os.Stat(destination)
-	if err2 != nil {
-		fmt.Println("Dossier Destination Innexistant. Le créer ? Y or N")
-		rep := ""
-		fmt.Scanln(&rep)
-		if rep == "Y" {
-			dest = false
-		} else {
-			dest = true
-		}
-
-	}
-	return photo, dest
 }

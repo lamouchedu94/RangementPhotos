@@ -11,31 +11,42 @@ import (
 )
 
 func main() {
-	err := ArgumentsVerif()
+	s := Settings{}
+	err := s.ArgumentsVerif()
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	settings := Settings{}
-	fmt.Println(settings.SrcPath)
-	//CheminPhotos := "./Photos"
-	//Destination := "./Rangee"
-	NbPhotos := 0
+	fmt.Println(s.SrcPath)
+
 	deb := time.Now()
 
-	err = filepath.Walk(settings.SrcPath, func(path string, info fs.FileInfo, err error) error {
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	err = s.run()
+	fin := time.Now()
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println("Photos Triées en :", fin.Sub(deb))
+}
+
+func (s *Settings) run() error {
+	NbPhotos := 0
+	err := filepath.Walk(s.SrcPath, func(path string, info fs.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
 
 		if !info.IsDir() {
-			extention := strings.Split(path, ".")
-			lenExtention := len(extention)
-			if extention[lenExtention-1] != "mp4" {
+			extention := strings.ToLower(filepath.Ext(path))
+			if extention != ".mp4" {
 
 				date := date_img(path)
 				dateFormate := date.Format("2006-01-02")
-				RepertoireDate(dateFormate, settings.DstPath, path)
+				RepertoireDate(dateFormate, s.DstPath, path)
 
 				NbPhotos += 1
 			}
@@ -44,12 +55,9 @@ func main() {
 
 		return nil
 	})
-	if err != nil {
-		fmt.Println(err)
-	}
-	fin := time.Now()
-	fmt.Println(NbPhotos, "Photos Triées en :", fin.Sub(deb))
+	return err
 }
+
 func RepertoireDate(date string, chemin string, photos string) {
 	//fmt.Println("ici")
 	TabDate := strings.Split(date, "-")
