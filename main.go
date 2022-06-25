@@ -46,7 +46,11 @@ func (s *Settings) run() error {
 
 				date := date_img(path)
 				dateFormate := date.Format("2006-01-02")
-				RepertoireDate(dateFormate, s.DstPath, path)
+				CurrentPath, err := RepertoireDate(dateFormate, s.DstPath, path)
+				if err != nil {
+					fmt.Println(err)
+				}
+				CopyPictures(path, CurrentPath)
 
 				NbPhotos += 1
 			}
@@ -58,12 +62,11 @@ func (s *Settings) run() error {
 	return err
 }
 
-func RepertoireDate(date string, chemin string, photos string) {
+func RepertoireDate(date string, chemin string, photos string) (string, error) {
 	//fmt.Println("ici")
 	TabDate := strings.Split(date, "-")
 	TabDate = FormatageMois(TabDate)
-	TabPhoto := strings.Split(photos, "/")
-	NbRepertoires := len(TabPhoto)
+
 	//fmt.Println(TabDate)
 	CheminProvisoir := chemin
 	_, err := os.Stat(CheminProvisoir)
@@ -80,9 +83,14 @@ func RepertoireDate(date string, chemin string, photos string) {
 		}
 
 	}
-	source, _ := os.Open(photos)
+	return CheminProvisoir, err
+}
+func CopyPictures(Pictures string, CurrentPath string) {
+	TabPhoto := strings.Split(Pictures, "/")
+	NbRepertoires := len(TabPhoto)
+	source, _ := os.Open(Pictures)
 	defer source.Close()
-	dst, err := os.Create(CheminProvisoir + "/" + TabPhoto[NbRepertoires-1])
+	dst, err := os.Create(CurrentPath + "/" + TabPhoto[NbRepertoires-1])
 	if err != nil {
 		fmt.Println(err)
 	}
