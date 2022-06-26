@@ -1,2 +1,4 @@
+github.com/lamouchedu94/goexif v0.0.0-20220622201916-422c36bfb92e h1:8mQwxziYgh2WQFCviiZaQa66OHU6ps5t01NTwnRI1BY=
+github.com/lamouchedu94/goexif v0.0.0-20220622201916-422c36bfb92e/go.mod h1:/TBbJ96cT27MlwThSgQlDQvW3XT+bDOCOpFw3rbr/d0=
 github.com/rwcarlsen/goexif v0.0.0-20190401172101-9e8deecbddbd h1:CmH9+J6ZSsIjUK3dcGsnCnO41eRBOnY12zwkn5qVwgc=
 github.com/rwcarlsen/goexif v0.0.0-20190401172101-9e8deecbddbd/go.mod h1:hPqNNc0+uJM6H+SuU8sEs5K5IQeKccPqeSjfgcKGgPk=

@@ -16,7 +16,6 @@ func (s *Settings) ArgumentsVerif() error {
 	flag.StringVar(&s.SrcPath, "s", "", "Dossier Photos")
 	flag.StringVar(&s.DstPath, "d", "", "Dossier destination")
 	flag.Parse()
-	fmt.Println(s.DstPath, s.SrcPath)
 
 	_, err := os.Stat(s.SrcPath)
 	if err != nil {

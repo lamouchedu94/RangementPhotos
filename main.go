@@ -17,24 +17,19 @@ func main() {
 		fmt.Println(err)
 		return
 	}
-	fmt.Println(s.SrcPath)
 
-	deb := time.Now()
-
-	if err != nil {
-		fmt.Println(err)
-	}
+	start := time.Now()
 
 	err = s.run()
-	fin := time.Now()
+	end := time.Now()
 	if err != nil {
 		fmt.Println(err)
 	}
-	fmt.Println("Photos Triées en :", fin.Sub(deb))
+	fmt.Println("Photos Triées en :", end.Sub(start))
 }
 
 func (s *Settings) run() error {
-	NbPhotos := 0
+	PicturesNb := 0
 	err := filepath.Walk(s.SrcPath, func(path string, info fs.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -52,7 +47,7 @@ func (s *Settings) run() error {
 				}
 				CopyPictures(path, CurrentPath)
 
-				NbPhotos += 1
+				PicturesNb += 1
 			}
 		}
 		//fmt.Println(path)
@@ -88,13 +83,17 @@ func RepertoireDate(date string, chemin string, photos string) (string, error) {
 func CopyPictures(Pictures string, CurrentPath string) {
 	TabPhoto := strings.Split(Pictures, "/")
 	NbRepertoires := len(TabPhoto)
+
 	source, _ := os.Open(Pictures)
+
 	defer source.Close()
 	dst, err := os.Create(CurrentPath + "/" + TabPhoto[NbRepertoires-1])
 	if err != nil {
 		fmt.Println(err)
 	}
 	defer dst.Close()
+
 	io.Copy(dst, source)
+	dst.Close()
 	//fmt.Println("fin")
 }
