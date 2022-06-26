@@ -35,22 +35,23 @@ func (s *Settings) run() error {
 			return err
 		}
 
-		if !info.IsDir() {
-			extention := strings.ToLower(filepath.Ext(path))
-			if extention != ".mp4" {
-
-				date := date_img(path)
-				dateFormate := date.Format("2006-01-02")
-				CurrentPath, err := RepertoireDate(dateFormate, s.DstPath, path)
-				if err != nil {
-					fmt.Println(err)
-				}
-				CopyPictures(path, CurrentPath)
-
-				PicturesNb += 1
-			}
+		if info.IsDir() {
+			return nil
 		}
-		//fmt.Println(path)
+		extention := strings.ToLower(filepath.Ext(path))
+		if extention != ".mp4" {
+
+			date := date_img(path)
+			dateFormate := date.Format("2006-01-02")
+			CurrentPath, err := RepertoireDate(dateFormate, s.DstPath, path)
+			if err != nil {
+				fmt.Println(err)
+				return err
+			}
+			CopyPictures(path, CurrentPath)
+
+			PicturesNb += 1
+		}
 
 		return nil
 	})
@@ -59,6 +60,7 @@ func (s *Settings) run() error {
 
 func RepertoireDate(date string, chemin string, photos string) (string, error) {
 	//fmt.Println("ici")
+
 	TabDate := strings.Split(date, "-")
 	TabDate = FormatageMois(TabDate)
 
