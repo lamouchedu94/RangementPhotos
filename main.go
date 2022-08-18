@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/lamouchedu94/RangementPhotos/shoot"
 )
 
 func main() {
@@ -41,7 +43,10 @@ func (s *Settings) run() error {
 		extention := strings.ToLower(filepath.Ext(path))
 		if extention != ".mp4" {
 
-			date := date_img(path)
+			date, err := shoot.Date(path)
+			if err != nil {
+				return err
+			}
 			dateFormate := date.Format("2006-01-02")
 			CurrentPath, err := RepertoireDate(dateFormate, s.DstPath, path)
 			if err != nil {
