@@ -2,17 +2,18 @@ package main
 
 import (
 	"fmt"
-	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
+	copyf "github.com/lamouchedu94/RangementPhotos/copy"
 	"github.com/lamouchedu94/RangementPhotos/shoot"
 )
 
 func main() {
+
 	s := Settings{}
 	err := s.ArgumentsVerif()
 	if err != nil {
@@ -31,8 +32,7 @@ func main() {
 }
 
 func (s *Settings) run() error {
-	PicturesNb := 0
-	err := filepath.Walk(s.SrcPath, func(path string, info fs.FileInfo, err error) error {
+	err := filepath.Walk(s.SrcPath, func(img string, info fs.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
@@ -40,67 +40,39 @@ func (s *Settings) run() error {
 		if info.IsDir() {
 			return nil
 		}
-		extention := strings.ToLower(filepath.Ext(path))
-		if extention != ".mp4" {
 
-			date, err := shoot.Date(path)
-			if err != nil {
-				return err
-			}
-			dateFormate := date.Format("2006-01-02")
-			CurrentPath, err := RepertoireDate(dateFormate, s.DstPath, path)
-			if err != nil {
-				fmt.Println(err)
-				return err
-			}
-			CopyPictures(path, CurrentPath)
-
-			PicturesNb += 1
+		date, err := shoot.Date(img)
+		if err != nil {
+			return nil
 		}
+
+		dir, err := s.finaldir(date)
+		if err != nil {
+			return err
+		}
+		copyf.CopyPictures(img, dir)
 
 		return nil
 	})
 	return err
 }
 
-func RepertoireDate(date string, chemin string, photos string) (string, error) {
-	//fmt.Println("ici")
+func (s *Settings) finaldir(date time.Time) (string, error) {
+	datef := date.Format("2006-01-02")
+	tabdate := strings.Split(datef, "-")
+	datef = s.DstPath
+	for _, val := range tabdate {
+		datef += "/" + val
 
-	TabDate := strings.Split(date, "-")
-	TabDate = FormatageMois(TabDate)
+		_, err := os.Stat(datef)
 
-	//fmt.Println(TabDate)
-	CheminProvisoir := chemin
-	_, err := os.Stat(CheminProvisoir)
-	if err != nil {
-		os.Mkdir(CheminProvisoir, os.ModePerm)
-	}
-
-	for i := 0; i < 3; i++ {
-		CheminProvisoir += "/" + TabDate[i]
-		_, err := os.Stat(CheminProvisoir)
 		if err != nil {
-			//fmt.Println(err)
-			os.Mkdir(CheminProvisoir, os.ModePerm)
+			err = os.Mkdir(datef, 0750)
+			if err != nil {
+				return "", err
+			}
 		}
 
 	}
-	return CheminProvisoir, err
-}
-func CopyPictures(Pictures string, CurrentPath string) {
-	TabPhoto := strings.Split(Pictures, "/")
-	NbRepertoires := len(TabPhoto)
-
-	source, _ := os.Open(Pictures)
-
-	defer source.Close()
-	dst, err := os.Create(CurrentPath + "/" + TabPhoto[NbRepertoires-1])
-	if err != nil {
-		fmt.Println(err)
-	}
-	defer dst.Close()
-
-	io.Copy(dst, source)
-	dst.Close()
-	//fmt.Println("fin")
+	return datef, nil
 }
