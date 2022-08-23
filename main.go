@@ -1,21 +1,20 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
+	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
-
-	copyf "github.com/lamouchedu94/RangementPhotos/copy"
-	"github.com/lamouchedu94/RangementPhotos/shoot"
 )
 
 func main() {
 
 	s := Settings{}
-	err := s.ArgumentsVerif()
+	err := s.VerifArguments()
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -36,43 +35,60 @@ func (s *Settings) run() error {
 		if err != nil {
 			return err
 		}
-
 		if info.IsDir() {
 			return nil
 		}
-
-		date, err := shoot.Date(img)
-		if err != nil {
-			return nil
+		switch strings.ToUpper(filepath.Ext(img)) {
+		case ".JPG", ".JPEG", ".CR2", ".CR3":
+			return s.TraiteFichier(img)
 		}
-
-		dir, err := s.finaldir(date)
-		if err != nil {
-			return err
-		}
-		copyf.CopyPictures(img, dir)
-
 		return nil
 	})
 	return err
 }
 
-func (s *Settings) finaldir(date time.Time) (string, error) {
-	datef := date.Format("2006-01-02")
-	tabdate := strings.Split(datef, "-")
-	datef = s.DstPath
-	for _, val := range tabdate {
-		datef += "/" + val
-
-		_, err := os.Stat(datef)
-
-		if err != nil {
-			err = os.Mkdir(datef, 0750)
-			if err != nil {
-				return "", err
-			}
-		}
-
+func (s *Settings) TraiteFichier(img string) error {
+	file, err := os.Open(img)
+	if err != nil {
+		return err
 	}
-	return datef, nil
+	defer file.Close()
+
+	buffer := bytes.NewBuffer(nil)
+	teeR := io.TeeReader(file, buffer)
+
+	var date time.Time
+	switch strings.ToUpper(filepath.Ext(img)) {
+	case ".JPG", ".JPEG", ".CR2":
+		date, err = DateJPG(teeR)
+	case ".CR3":
+		date, err = DateCR3(teeR)
+	}
+
+	if err != nil {
+		return err
+	}
+
+	multiR := io.MultiReader(buffer, file)
+
+	dir, err := s.DestinationDir(date)
+	if err != nil {
+		return err
+	}
+
+	destFileName := filepath.Join(dir, filepath.Base(img))
+	w, err := os.Create(destFileName)
+	if err != nil {
+		return err
+	}
+
+	_, err = io.Copy(w, multiR)
+
+	return err
+}
+
+func (s *Settings) DestinationDir(date time.Time) (string, error) {
+	datef := date.Format("2006/01/02")
+	dest := filepath.Join(s.DstPath, datef)
+	return dest, os.MkdirAll(dest, 0750)
 }
