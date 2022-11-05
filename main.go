@@ -62,7 +62,7 @@ func (s *Settings) finaldir(date time.Time) (string, error) {
 	tabdate := strings.Split(datef, "-")
 	datef = s.DstPath
 	for _, val := range tabdate {
-		datef += "/" + val
+		datef += "/" + datef + "." + val
 
 		_, err := os.Stat(datef)
 
